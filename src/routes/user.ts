@@ -5,6 +5,5 @@ const router = express.Router();
 
 //route "/api/v1/user/new"
 router.post("/new", newUser);
-router.get("/newe", new user);
 
 export default router;
