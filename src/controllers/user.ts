@@ -21,7 +21,7 @@ export const newUser = async (
 
         res.status(201).json({
             success: true,
-            message: `Welcome, ${user.name}`,
+            message: `Welcome, ${user.name} at Ecommerce`,
           });
     } catch (error) {
         res.status(400).json({
