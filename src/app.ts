@@ -4,6 +4,7 @@ import express from "express";
 import userRoutes from "./routes/user.js";
 import { connect } from "http2";
 import { connectDB } from "./utils/features.js";
+import { errorMiddleware } from "./middlewares/error.js";
 
 const port = 4000;
 
@@ -19,6 +20,8 @@ app.get("/", (req, res) => {
 
 // using routes
 app.use("/api/v1/user", userRoutes);
+
+app.use(errorMiddleware)
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

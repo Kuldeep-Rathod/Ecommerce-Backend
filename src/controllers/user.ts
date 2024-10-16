@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { User } from "../models/user.js";
 import { NewUserRequestBody } from "../types/types.js";
+import errorHandler from "../utils/utilityClass.js";
 
 export const newUser = async (
     req: Request<{}, {}, NewUserRequestBody>,
@@ -24,9 +25,6 @@ export const newUser = async (
             message: `Welcome, ${user.name} at Ecommerce`,
           });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error,
-          });
+        next(error);
     }
 };
