@@ -38,3 +38,45 @@ export const newUser = TryCatch(
         });
     }
 );
+
+export const getAllUsers = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const users = await User.find();
+        return res.status(200).json({
+            success: true,
+            users,
+        });
+    }
+);
+
+export const getUser = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+
+        const user = await User.findById(id);
+
+        if (!user) return next(new errorHandler("User not found", 404));
+
+        return res.status(200).json({
+            success: true,
+            user,
+        });
+    }
+);
+
+export const deleteUser = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+
+        const user = await User.findById(id);
+
+        if (!user) return next(new errorHandler("User not found", 404));
+
+        await user.deleteOne();
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted successfully",
+        });
+    }
+);
