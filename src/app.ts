@@ -1,4 +1,5 @@
 import express from "express";
+import dotenv from "dotenv";
 
 //importing routes
 import userRoutes from "./routes/user.js";
@@ -6,7 +7,9 @@ import { connect } from "http2";
 import { connectDB } from "./utils/features.js";
 import { errorMiddleware } from "./middlewares/error.js";
 
-const port = 4000;
+dotenv.config();
+
+const port = process.env.PORT || 3000;
 
 const app = express();
 
