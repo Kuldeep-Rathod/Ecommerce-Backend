@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Product } from "../models/product.js";
 
 export interface NewUserRequestBody {
     name: string;
@@ -44,3 +45,9 @@ export interface BaseQuery {
     };
     category?: string;
 }
+
+export type InvalidateCacheProps = {
+    product?: boolean;
+    order?: boolean;
+    admin?: boolean;
+};

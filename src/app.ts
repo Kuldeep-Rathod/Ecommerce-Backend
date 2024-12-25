@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connect } from "http2";
 import { connectDB } from "./utils/features.js";
 import { errorMiddleware } from "./middlewares/error.js";
+import NodeCache from "node-cache";
 
 //importing routes
 import userRoute from "./routes/user.js";
@@ -18,6 +19,8 @@ const app = express();
 app.use(express.json());
 
 connectDB();
+
+export const myCache = new NodeCache();
 
 app.get("/", (req, res) => {
     res.send(`Server is running on http://localhost:${port}`);

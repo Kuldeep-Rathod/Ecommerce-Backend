@@ -8,7 +8,89 @@ import {
 } from "../types/types.js";
 import errorHandler from "../utils/utilityClass.js";
 import { rm } from "fs";
-import { faker } from "@faker-js/faker";
+import { myCache } from "../app.js";
+import { invalidatCache } from "../utils/features.js";
+
+//Revalidate the cache on new, updated, or deleted products and on New orders
+export const getLatestProduct = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        let products;
+
+        if (myCache.has("latestProduct")) {
+            products = JSON.parse(myCache.get("latestProduct") as string);
+        } else {
+            products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+            myCache.set("latestProduct", JSON.stringify(products));
+        }
+
+        return res.status(200).json({
+            success: true,
+            products,
+        });
+    }
+);
+
+//Revalidate the cache on new, updated, or deleted products and on New orders
+export const getAllCategories = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        let categories;
+
+        if (myCache.has("categories")) {
+            categories = JSON.parse(myCache.get("categories") as string);
+        } else {
+            categories = await Product.find({}).distinct("category");
+            myCache.set("categories", JSON.stringify(categories));
+        }
+
+        return res.status(200).json({
+            success: true,
+            categories,
+        });
+    }
+);
+
+//Revalidate the cache on new, updated, or deleted products and on New orders
+export const getAdminProduct = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        let products;
+
+        if (myCache.has("adminProducts")) {
+            products = JSON.parse(myCache.get("adminProducts") as string);
+        } else {
+            products = await Product.find({});
+            myCache.set("adminProducts", JSON.stringify(products));
+        }
+
+        return res.status(201).json({
+            success: true,
+            products,
+        });
+    }
+);
+
+//Revalidate the cache on new, updated, or deleted products and on New orders
+export const getSingleProduct = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        let product;
+        const { id } = req.params;
+
+        if (myCache.has(`product-${id}`)) {
+            product = JSON.parse(myCache.get(`product-${id}`) as string);
+        } else {
+            product = await Product.findById(id);
+            if (!product) {
+                return next(new errorHandler("Product not found", 404));
+            }
+
+            myCache.set(`product-${id}`, JSON.stringify(product));
+        }
+
+        return res.status(201).json({
+            success: true,
+            product,
+        });
+    }
+);
 
 export const newProduct = TryCatch(
     async (
@@ -38,55 +120,12 @@ export const newProduct = TryCatch(
             photo: photo?.path,
         });
 
+        //invalidate the cache
+        await invalidatCache({ product: true });
+
         return res.status(201).json({
             success: true,
             message: "Product created successfully",
-        });
-    }
-);
-
-export const getLatestProduct = TryCatch(
-    async (req: Request, res: Response, next: NextFunction) => {
-        const products = await Product.find({})
-            .sort({ createdAt: -1 })
-            .limit(5);
-
-        return res.status(201).json({
-            success: true,
-            products,
-        });
-    }
-);
-
-export const getAllCategories = TryCatch(
-    async (req: Request, res: Response, next: NextFunction) => {
-        const categories = await Product.find({}).distinct("category");
-
-        return res.status(201).json({
-            success: true,
-            categories,
-        });
-    }
-);
-
-export const getAdminProduct = TryCatch(
-    async (req: Request, res: Response, next: NextFunction) => {
-        const products = await Product.find({});
-
-        return res.status(201).json({
-            success: true,
-            products,
-        });
-    }
-);
-
-export const getSingleProduct = TryCatch(
-    async (req: Request, res: Response, next: NextFunction) => {
-        const product = await Product.findById(req.params.id);
-
-        return res.status(201).json({
-            success: true,
-            product,
         });
     }
 );
@@ -127,6 +166,9 @@ export const updateProduct = TryCatch(
 
         await product.save(); // Save updated product
 
+        //invalidate the cache
+        await invalidatCache({ product: true });
+
         return res.status(200).json({
             success: true,
             message: "Product updated successfully",
@@ -157,6 +199,9 @@ export const deleteProduct = TryCatch(
 
         // Ensure the correct product is deleted
         await Product.deleteOne({ _id: id });
+
+        //invalidate the cache
+        await invalidatCache({ product: true });
 
         return res.status(200).json({
             success: true,
@@ -224,4 +269,3 @@ const deleteRandomsProducts = async (count: number = 10) => {
 
     console.log({ succecss: true });
 };
-
