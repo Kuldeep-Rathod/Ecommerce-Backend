@@ -9,6 +9,13 @@ export interface NewUserRequestBody {
     dob: Date;
 }
 
+export interface NewProductRequestBody {
+    name: string;
+    price: number;
+    stock: number;    
+    category: string;
+}
+
 export type ControllerType = any;
 
 //i used "any" because if i use bottom type then i will get error in user.ts in router

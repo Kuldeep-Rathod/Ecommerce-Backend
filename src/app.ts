@@ -1,11 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
-
-//importing routes
-import userRoutes from "./routes/user.js";
 import { connect } from "http2";
 import { connectDB } from "./utils/features.js";
 import { errorMiddleware } from "./middlewares/error.js";
+
+//importing routes
+import userRoute from "./routes/user.js";
+import productRoute from "./routes/products.js";
+
 
 dotenv.config();
 
@@ -22,7 +24,8 @@ app.get("/", (req, res) => {
 });
 
 // using routes
-app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/user", userRoute);
+app.use("/api/v1/product", productRoute);
 
 app.use(errorMiddleware);
 
