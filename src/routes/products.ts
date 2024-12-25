@@ -4,6 +4,7 @@ import {
     deleteProduct,
     getAdminProduct,
     getAllCategories,
+    getAllProducts,
     getLatestProduct,
     getSingleProduct,
     newProduct,
@@ -14,7 +15,10 @@ import { singleUpload } from "../middlewares/multer.js";
 const router = express.Router();
 
 //To create a new product - /api/v1/product/new
-router.post("/new", isAdmin, singleUpload, newProduct);
+router.post("/new", singleUpload, newProduct);
+
+//To get all products - /api/v1/product/all
+router.get("/all", getAllProducts);
 
 //To get latest 5 products - /api/v1/product/latest
 router.get("/latest", getLatestProduct);

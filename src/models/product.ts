@@ -12,11 +12,11 @@ const productSchema = new mongoose.Schema(
             required: [true, "Please add product photo"],
         },
         price: {
-            type: String,
+            type: Number,
             required: [true, "Please enter product price"],
         },
         stock: {
-            type: String,
+            type: Number,
             required: [true, "Please enter stock"],
         },
         category: {
