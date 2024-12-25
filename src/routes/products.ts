@@ -5,6 +5,6 @@ import { upload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
-router.post("/new", upload, newProduct);
+router.post("/new", isAdmin, upload, newProduct);
 
 export default router;
