@@ -3,9 +3,9 @@ import { InvalidateCacheProps } from "../types/types.js";
 import { myCache } from "../app.js";
 import { Product } from "../models/product.js";
 
-export const connectDB = async () => {
+export const connectDB = async (uri: string) => {
     try {
-        await mongoose.connect("mongodb://localhost:27017", {
+        await mongoose.connect(uri, {
             dbName: "Ecommerce",
         });
         const connection = mongoose.connection;
@@ -30,7 +30,7 @@ export const invalidatCache = async ({
         const products = await Product.find({}).select("_id");
 
         products.forEach((i) => {
-            productKeys.push(`product-${i._id}`);   
+            productKeys.push(`product-${i._id}`);
         });
 
         myCache.del(productKeys);
