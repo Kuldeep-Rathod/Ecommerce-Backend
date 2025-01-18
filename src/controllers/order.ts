@@ -4,6 +4,7 @@ import { NewOrderRequestBody } from "../types/types.js";
 import { Order } from "../models/order.js";
 import { invalidatCache, reduceStock } from "../utils/features.js";
 import errorHandler from "../utils/utilityClass.js";
+import { myCache } from "../app.js";
 
 export const newOrder = TryCatch(
     async (
@@ -50,6 +51,27 @@ export const newOrder = TryCatch(
         return res.status(201).json({
             success: true,
             message: "Order placed successfully",
+        });
+    }
+);
+
+export const myOrders = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id: user } = req.query;
+
+        const key = `my-orders-${user}`;
+
+        let orders = [];
+
+        if (myCache.has(key)) orders = JSON.parse(myCache.get(key) as string);
+        else {
+            orders = await Order.find({ user });
+            myCache.set(key, JSON.stringify(orders));
+        }
+
+        return res.status(201).json({
+            success: true,
+            orders,
         });
     }
 );
