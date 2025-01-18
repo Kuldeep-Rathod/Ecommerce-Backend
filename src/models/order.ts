@@ -20,7 +20,7 @@ const orderSchema = new mongoose.Schema(
                 type: String,
                 required: true,
             },
-            pinCode: {
+            pincode: {
                 type: Number,
                 required: true,
             },
@@ -34,7 +34,7 @@ const orderSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
-        subTotal: {
+        subtotal: {
             type: Number,
             required: true,
         },
@@ -45,10 +45,12 @@ const orderSchema = new mongoose.Schema(
         shippingCharge: {
             type: Number,
             required: true,
+            default: 0,
         },
         discount: {
             type: Number,
             required: true,
+            default: 0,
         },
         total: {
             type: Number,
