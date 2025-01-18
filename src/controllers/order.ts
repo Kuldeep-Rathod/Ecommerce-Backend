@@ -6,6 +6,74 @@ import { invalidatCache, reduceStock } from "../utils/features.js";
 import errorHandler from "../utils/utilityClass.js";
 import { myCache } from "../app.js";
 
+//Get my orders
+export const myOrders = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id: user } = req.query;
+
+        const key = `my-orders-${user}`;
+
+        let orders = [];
+
+        if (myCache.has(key)) orders = JSON.parse(myCache.get(key) as string);
+        else {
+            orders = await Order.find({ user });
+            myCache.set(key, JSON.stringify(orders));
+        }
+
+        return res.status(200).json({
+            success: true,
+            orders,
+        });
+    }
+);
+
+//Get all orders
+export const allOrders = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const key = `all-orders`;
+
+        let orders = [];
+
+        if (myCache.has(key)) orders = JSON.parse(myCache.get(key) as string);
+        else {
+            orders = await Order.find().populate("user", "name");
+            myCache.set(key, JSON.stringify(orders));
+        }
+
+        return res.status(200).json({
+            success: true,
+            orders,
+        });
+    }
+);
+
+//Get single order
+export const getSingleOrder = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const key = `order-${id}`;
+
+        let order;
+
+        if (myCache.has(key)) order = JSON.parse(myCache.get(key) as string);
+        else {
+            order = await Order.findById(id).populate("user", "name");
+
+            if (!order) {
+                return next(new errorHandler("Order not found", 404));
+            }
+            myCache.set(key, JSON.stringify(order));
+        }
+
+        return res.status(200).json({
+            success: true,
+            order,
+        });
+    }
+);
+
+//Create new order
 export const newOrder = TryCatch(
     async (
         req: Request<{}, {}, NewOrderRequestBody>,
@@ -51,27 +119,6 @@ export const newOrder = TryCatch(
         return res.status(201).json({
             success: true,
             message: "Order placed successfully",
-        });
-    }
-);
-
-export const myOrders = TryCatch(
-    async (req: Request, res: Response, next: NextFunction) => {
-        const { id: user } = req.query;
-
-        const key = `my-orders-${user}`;
-
-        let orders = [];
-
-        if (myCache.has(key)) orders = JSON.parse(myCache.get(key) as string);
-        else {
-            orders = await Order.find({ user });
-            myCache.set(key, JSON.stringify(orders));
-        }
-
-        return res.status(201).json({
-            success: true,
-            orders,
         });
     }
 );

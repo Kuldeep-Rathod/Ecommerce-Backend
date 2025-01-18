@@ -12,6 +12,9 @@ export const errorMiddleware = (
     error.message = error.message || "Something went wrong";
     error.statusCode = error.statusCode || 500;
 
+    if (error.name === "CastError")
+        error.message = `Resource not found. Invalid ID`;
+
     res.status(error.statusCode).json({
         success: false,
         message: error.message,
