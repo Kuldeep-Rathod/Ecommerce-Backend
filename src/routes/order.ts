@@ -1,6 +1,13 @@
 import express from "express";
 import { isAdmin } from "../middlewares/auth.js";
-import { allOrders, getSingleOrder, myOrders, newOrder } from "../controllers/order.js";
+import {
+    allOrders,
+    deleteOrder,
+    getSingleOrder,
+    myOrders,
+    newOrder,
+    processOrder,
+} from "../controllers/order.js";
 
 const router = express.Router();
 
@@ -8,12 +15,16 @@ const router = express.Router();
 router.post("/new", newOrder);
 
 //route "/api/v1/order/my"
-router.get("/my", myOrders)
+router.get("/my", myOrders);
 
 //route "/api/v1/order/all"
-router.get("/all", isAdmin, allOrders)
+router.get("/all", isAdmin, allOrders);
 
 //route "/api/v1/order/:id"
-router.route("/:id").get(getSingleOrder)
+router
+    .route("/:id")
+    .get(getSingleOrder)
+    .put(isAdmin, processOrder)
+    .delete(isAdmin, deleteOrder);
 
 export default router;

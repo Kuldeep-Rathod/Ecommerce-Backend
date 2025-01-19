@@ -101,7 +101,7 @@ export const newOrder = TryCatch(
         )
             return next(new errorHandler("All fields are required", 400));
 
-        await Order.create({
+        const order = await Order.create({
             shippingInfo,
             orderItems,
             user,
@@ -114,11 +114,96 @@ export const newOrder = TryCatch(
 
         await reduceStock(orderItems);
 
-        await invalidatCache({ order: true, product: true, admin: true });
+        await invalidatCache({
+            order: true,
+            product: true,
+            admin: true,
+            userId: user,
+            productId: order.orderItems.map((i) => String(i.productId)),
+        });
 
         return res.status(201).json({
             success: true,
             message: "Order placed successfully",
+        });
+    }
+);
+
+//Process order
+export const processOrder = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const order = await Order.findById(id);
+
+        if (!order) {
+            return next(new errorHandler("Order not found", 404));
+        }
+
+        switch (order.status) {
+            case "Processing":
+                order.status = "Shipped";
+                break;
+            case "Shipped":
+                order.status = "Delivered";
+                break;
+            default:
+                return next(new errorHandler("Order already delivered", 400));
+        }
+
+        await order.save();
+
+        // Invalidate the cache for the single order
+        const orderKey = `order-${id}`;
+        if (myCache.has(orderKey)) {
+            myCache.del(orderKey);
+        }
+
+        await invalidatCache({
+            order: true,
+            product: false,
+            admin: true,
+            userId: order.user,
+            orderId: String(order._id),
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Order Processed successfully",
+        });
+    }
+);
+
+// Delete order
+export const deleteOrder = TryCatch(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const order = await Order.findById(id);
+
+        if (!order) {
+            return next(new errorHandler("Order not found", 404));
+        }
+
+        await order.deleteOne();
+
+        // Invalidate the cache for the single order
+        const orderKey = `order-${id}`;
+        if (myCache.has(orderKey)) {
+            myCache.del(orderKey);
+        }
+
+        await invalidatCache({
+            order: true,
+            product: false,
+            admin: true,
+            userId: order.user,
+            orderId: String(order._id),
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Order Deleted successfully",
         });
     }
 );
