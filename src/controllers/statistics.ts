@@ -81,6 +81,10 @@ export const getDashboardStatistics = TryCatch(
                 },
             });
 
+            const latestTransactionsPromise = await Order.find({})
+                .select(["orderItems", "discount", "total", "status"])
+                .limit(4);
+
             const [
                 thisMonthProducts,
                 lastMonthProducts,
@@ -92,6 +96,9 @@ export const getDashboardStatistics = TryCatch(
                 totalUsers,
                 totalOrders,
                 lastSixMonthsOrders,
+                categories,
+                femaleUsers,
+                latestTransactions,
             ] = await Promise.all([
                 thisMonthProductsPromise,
                 lastMonthProductsPromise,
@@ -103,12 +110,17 @@ export const getDashboardStatistics = TryCatch(
                 User.countDocuments(),
                 Order.find({}).select("total"),
                 lastSixMonthsOrdersPromise,
+                Product.distinct("category"),
+                User.countDocuments({ gender: "Female" }),
+                latestTransactionsPromise,
             ]);
 
+            // Calculate the monthly change percentage
             const thisMonthRevenue = thisMonthOrders.reduce(
                 (total, order) => total + (order.total || 0),
                 0
             );
+
             const lastMonthRevenue = lastMonthOrders.reduce(
                 (total, order) => total + (order.total || 0),
                 0
@@ -145,6 +157,7 @@ export const getDashboardStatistics = TryCatch(
                 orders: totalOrders.length,
             };
 
+            // Count the number of documents for each month
             const orderMonthCounts = new Array(6).fill(0);
             const orderMonthlyRevenue = new Array(6).fill(0);
 
@@ -158,7 +171,49 @@ export const getDashboardStatistics = TryCatch(
                 }
             });
 
+            // Count the number of documents for each category
+            const categoryCountsPromise = categories.map((category) =>
+                Product.countDocuments({ category })
+            );
+
+            const results = await Promise.allSettled(categoryCountsPromise);
+
+            const categoryCounts: Record<string, number>[] = [];
+
+            results.forEach((result, index) => {
+                if (result.status === "fulfilled") {
+                    categoryCounts.push({
+                        [categories[index]]: Math.round(
+                            (result.value / totalProducts) * 100
+                        ), // Access the value directly for fulfilled results
+                    });
+                } else {
+                    console.error(
+                        `Error counting documents for category ${categories[index]}:`,
+                        result.reason
+                    );
+                }
+            });
+
+            // User gender statistics
+            const genderRatios = {
+                male: totalUsers - femaleUsers,
+                female: femaleUsers,
+            };
+
+            const modifiedLatestTransactions = latestTransactions.map((i) => ({
+                _id: i._id,
+                discount: i.discount,
+                amount: i.total,
+                quantity: i.orderItems.length,
+                status: i.status,
+            }));
+
             dashboardStatistics = {
+                latestTransactions: modifiedLatestTransactions,
+                genderRatios,
+                categories,
+                categoryCounts,
                 changePercent,
                 counts,
                 chart: {
