@@ -72,3 +72,37 @@ export const calculatePercentage = (thisMonth: number, lastMonth: number) => {
     const percent = ((thisMonth - lastMonth) / lastMonth) * 100;
     return Number(percent.toFixed(0));
 };
+
+// Count the number of documents for each category
+export const getInventories = async ({
+    categories,
+    totalProducts,
+}: {
+    categories: string[];
+    totalProducts: number;
+}) => {
+    const categoryCountsPromise = categories.map((category) =>
+        Product.countDocuments({ category })
+    );
+
+    const results = await Promise.allSettled(categoryCountsPromise);
+
+    const categoryCounts: Record<string, number>[] = [];
+
+    results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+            categoryCounts.push({
+                [categories[index]]: Math.round(
+                    (result.value / totalProducts) * 100
+                ), // Access the value directly for fulfilled results
+            });
+        } else {
+            console.error(
+                `Error counting documents for category ${categories[index]}:`,
+                result.reason
+            );
+        }
+    });
+
+    return categoryCounts;
+};

@@ -1,6 +1,11 @@
 import express from "express";
 import { isAdmin } from "../middlewares/auth.js";
-import { getDashboardStatistics } from "../controllers/statistics.js";
+import {
+    getBarCharts,
+    getDashboardStatistics,
+    getLineCharts,
+    getPieCharts,
+} from "../controllers/statistics.js";
 
 const router = express.Router();
 
@@ -8,12 +13,12 @@ const router = express.Router();
 router.get("/statistics", getDashboardStatistics);
 
 //route "/api/v1/dashboard/pie"
-router.get("/pie");
+router.get("/pie", getPieCharts);
 
 //route "/api/v1/dashboard/bar"
-router.get("/bar");
+router.get("/bar", getBarCharts);
 
 //route "/api/v1/dashboard/line"
-router.get("/line");
+router.get("/line", getLineCharts);
 
 export default router;
