@@ -106,3 +106,35 @@ export const getInventories = async ({
 
     return categoryCounts;
 };
+
+export interface MyDocument extends Document {
+    createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  photo: string;
+  price: number;
+  stock: number;
+  category: string;
+}
+
+type funcProps = {
+    length: number;
+    docArray: MyDocument[];
+    today: Date;
+};
+
+export const getMonthlyCounts = ({ length, docArray, today }: funcProps) => {
+    const data: number[] = new Array(length).fill(0);
+
+    docArray.forEach((i) => {
+        const creationDate = i.createdAt;
+        const monthDiff =
+            (today.getMonth() - creationDate.getMonth() + 12) % 12;
+
+        if (monthDiff < length) {
+            data[length - monthDiff - 1] += 1;
+        }
+    });
+
+    return data;
+};
