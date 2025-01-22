@@ -16,7 +16,7 @@ export const connectDB = async (uri: string) => {
     }
 };
 
-export const invalidatCache = async ({
+export const invalidatCache = ({
     product,
     order,
     admin,
