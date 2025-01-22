@@ -51,6 +51,12 @@ export const invalidatCache = async ({
         myCache.del(orderKeys);
     }
     if (admin) {
+        myCache.del([
+            "admin-statistics",
+            "admin-piecharts",
+            "admin-barcharts",
+            "admin-linecharts",
+        ]);
     }
 };
 
@@ -109,21 +115,23 @@ export const getInventories = async ({
 
 export interface MyDocument extends Document {
     createdAt: Date;
-  updatedAt: Date;
-  name: string;
-  photo: string;
-  price: number;
-  stock: number;
-  category: string;
+    discount: number;
+    total: number;
 }
 
 type funcProps = {
     length: number;
     docArray: MyDocument[];
     today: Date;
+    property?: string;
 };
 
-export const getMonthlyCounts = ({ length, docArray, today }: funcProps) => {
+export const getMonthlyCounts = ({
+    length,
+    docArray,
+    today,
+    property,
+}: funcProps) => {
     const data: number[] = new Array(length).fill(0);
 
     docArray.forEach((i) => {
@@ -132,7 +140,13 @@ export const getMonthlyCounts = ({ length, docArray, today }: funcProps) => {
             (today.getMonth() - creationDate.getMonth() + 12) % 12;
 
         if (monthDiff < length) {
-            data[length - monthDiff - 1] += 1;
+            if (property && i[property as keyof MyDocument] != null) {
+                data[length - monthDiff - 1] += i[
+                    property as keyof MyDocument
+                ] as number;
+            } else {
+                data[length - monthDiff - 1] += 1;
+            }
         }
     });
 

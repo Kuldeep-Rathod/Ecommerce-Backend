@@ -10,15 +10,15 @@ import {
 const router = express.Router();
 
 //route "/api/v1/dashboard/statistics"
-router.get("/statistics", getDashboardStatistics);
+router.get("/statistics", isAdmin, getDashboardStatistics);
 
 //route "/api/v1/dashboard/pie"
-router.get("/pie", getPieCharts);
+router.get("/pie", isAdmin, getPieCharts);
 
 //route "/api/v1/dashboard/bar"
-router.get("/bar", getBarCharts);
+router.get("/bar", isAdmin, getBarCharts);
 
 //route "/api/v1/dashboard/line"
-router.get("/line", getLineCharts);
+router.get("/line", isAdmin, getLineCharts);
 
 export default router;
