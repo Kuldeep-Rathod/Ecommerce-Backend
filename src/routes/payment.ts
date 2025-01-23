@@ -3,11 +3,15 @@ import { isAdmin } from "../middlewares/auth.js";
 import {
     allCoupons,
     applyDiscount,
+    createPaymentIntent,
     deleteCoupon,
     newCoupon,
 } from "../controllers/payment.js";
 
 const router = express.Router();
+
+//route "/api/v1/payment/create"
+router.post("/create", createPaymentIntent);
 
 //route "/api/v1/payment/discount"
 router.get("/discount", applyDiscount);
