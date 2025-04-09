@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 import {
     deleteUser,
     getAllUsers,
@@ -16,6 +16,6 @@ router.post("/new", newUser);
 router.get("/all", isAdmin, getAllUsers);
 
 //route "api/v1/user/dynamic :id"
-router.route("/:id").get(isAdmin, getUser).delete(isAdmin, deleteUser);
+router.route("/:id").get(getUser).delete(isAdmin, deleteUser);
 
 export default router;
