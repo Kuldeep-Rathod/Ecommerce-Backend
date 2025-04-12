@@ -202,7 +202,7 @@ export const deleteProduct = TryCatch(
         }
 
         // Ensure the correct product is deleted
-        await Product.deleteOne({ _id: id });
+        await product.deleteOne({ _id: id });
 
         //invalidate the cache
         invalidatCache({

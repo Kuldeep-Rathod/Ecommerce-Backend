@@ -45,10 +45,15 @@ export const applyDiscount = TryCatch(
     async (req: Request, res: Response, next: NextFunction) => {
         const { couponCode } = req.body;
 
+        if (!couponCode) {
+            return next(new errorHandler("Coupon code is required", 400));
+        }
+
         const discount = await Coupon.findOne({ couponCode });
 
-        if (!discount)
+        if (!discount) {
             return next(new errorHandler("Invalid coupon code", 400));
+        }
 
         return res.status(200).json({
             success: true,

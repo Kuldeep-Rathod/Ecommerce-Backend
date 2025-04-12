@@ -15,7 +15,7 @@ import { singleUpload } from "../middlewares/multer.js";
 const router = express.Router();
 
 //To create a new product - /api/v1/product/new
-router.post("/new", singleUpload, newProduct);
+router.post("/new", isAdmin, singleUpload, newProduct);
 
 //To get all products - /api/v1/product/all
 router.get("/all", getAllProducts);
