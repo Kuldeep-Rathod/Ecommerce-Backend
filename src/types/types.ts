@@ -74,7 +74,7 @@ export type ShippingInfoType = {
 export interface NewOrderRequestBody {
     shippingInfo: ShippingInfoType;
     user: string;
-    subtotal: number;
+    subTotal: number;
     tax: number;
     shippingCharges: number;
     discount: number;

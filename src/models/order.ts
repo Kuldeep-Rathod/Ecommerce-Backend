@@ -20,7 +20,7 @@ const orderSchema = new mongoose.Schema(
                 type: String,
                 required: true,
             },
-            pincode: {
+            pinCode: {
                 type: Number,
                 required: true,
             },
@@ -34,7 +34,7 @@ const orderSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
-        subtotal: {
+        subTotal: {
             type: Number,
             required: true,
         },
