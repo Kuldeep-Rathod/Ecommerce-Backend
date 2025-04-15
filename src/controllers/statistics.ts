@@ -357,6 +357,33 @@ export const getBarCharts = TryCatch(
             const twelveMonthsAgo = new Date();
             twelveMonthsAgo.setMonth(today.getMonth() - 12); // Adjust for twelve months ago
 
+            const monthNames = [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+            ];
+
+            const twelveMonths = [];
+
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(today);
+                date.setMonth(date.getMonth() - i);
+                twelveMonths.unshift(
+                    `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+                );
+            }
+
+            const sixMonths = twelveMonths.slice(6);
+
             const sixMonthsProductPromise: MyDocument[] = await Product.find({
                 createdAt: {
                     $gte: sixMonthsAgo,
@@ -407,6 +434,8 @@ export const getBarCharts = TryCatch(
                 users: sixMonthsUsersCount,
                 products: sixMonthsProductsCount,
                 orders: twelveMonthsOrdersCount,
+                twelveMonths,
+                sixMonths,
             };
 
             myCache.set(key, JSON.stringify(barCharts));
@@ -431,6 +460,31 @@ export const getLineCharts = TryCatch(
 
             const twelveMonthsAgo = new Date();
             twelveMonthsAgo.setMonth(today.getMonth() - 12); // Adjust for twelve months ago
+
+            const monthNames = [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+            ];
+
+            const twelveMonths = [];
+
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(today);
+                date.setMonth(date.getMonth() - i);
+                twelveMonths.unshift(
+                    `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+                );
+            }
 
             const twelveMonthsProductsPromise: MyDocument[] =
                 await Product.find({
@@ -495,6 +549,7 @@ export const getLineCharts = TryCatch(
                 products: sixMonthsProductsCount,
                 revenue,
                 discount,
+                twelveMonths,
             };
 
             myCache.set(key, JSON.stringify(lineCharts));
