@@ -5,11 +5,13 @@ import { TryCatch } from '../middlewares/error.js';
 import mongoose from 'mongoose';
 
 export const getWishlist = TryCatch(async (req: Request, res: Response) => {
-    const { userId }: { userId: string } = req.body;
+    const { userId } = req.query;
+
+    console.log(userId);
 
     const wishlist = await Wishlist.findOne({ user: userId }).populate({
         path: 'items.product',
-        select: 'name price photo category', // Only fetch needed fields
+        select: 'name price photo category stock', // Only fetch needed fields
     });
 
     if (!wishlist) {
@@ -74,7 +76,7 @@ export const toggleWishlistItem = TryCatch(
             message: existingItem
                 ? 'Removed from wishlist'
                 : 'Added to wishlist',
-            wishlist: updatedWishlist,
+            // wishlist: updatedWishlist,
         });
     }
 );
