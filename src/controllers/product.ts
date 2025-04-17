@@ -21,7 +21,7 @@ export const getLatestProduct = TryCatch(
         if (myCache.has('latestProduct')) {
             products = JSON.parse(myCache.get('latestProduct') as string);
         } else {
-            products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+            products = await Product.find({}).sort({ createdAt: -1 }).limit(8);
             myCache.set('latestProduct', JSON.stringify(products));
         }
 
@@ -156,9 +156,6 @@ export const updateProduct = TryCatch(
 
         const photo = req.file;
 
-        if (!photo)
-            return next(new errorHandler('Please add product photo', 400));
-
         // Handle new photo upload
         // if (photo) {
         //     // Delete from Cloudinary
@@ -166,23 +163,50 @@ export const updateProduct = TryCatch(
         //     product.photo = photo.path; // Update the photo path
         // }
 
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(photo.path, {
-            folder: 'uploads',
-            resource_type: 'auto',
-        });
+        if (photo) {
+            try {
+                // 🔥 Delete previous image if it exists
+                if (product.photo) {
+                    const parts = product.photo.split('/');
+                    const publicIdWithExt = parts.slice(-2).join('/');
+                    const publicId = publicIdWithExt.replace(
+                        /\.(jpg|jpeg|png|webp|gif)$/,
+                        ''
+                    );
+
+                    const deleteResult = await cloudinary.uploader.destroy(
+                        publicId
+                    );
+                    console.log('Delete result:', deleteResult);
+                }
+
+                // 📤 Upload new image to Cloudinary
+                const uploadResult = await cloudinary.uploader.upload(
+                    photo.path,
+                    {
+                        folder: 'uploads',
+                        resource_type: 'auto',
+                    }
+                );
+
+                product.photo = uploadResult.secure_url;
+            } catch (err) {
+                console.error('Error processing image:', err);
+            }
+        }
 
         // Update other fields conditionally
         if (name) product.name = name;
         if (price) product.price = price;
         if (stock) product.stock = stock;
         if (category) product.category = category.toLowerCase(); // Normalize category
-        if (photo) product.photo = result.secure_url;
 
         await product.save(); // Save updated product
 
-        // Delete file from local uploads folder
-        fs.unlinkSync(photo.path);
+        if (photo) {
+            // Delete file from local uploads folder
+            fs.unlinkSync(photo.path);
+        }
 
         //invalidate the cache
         invalidatCache({
