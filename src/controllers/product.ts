@@ -100,45 +100,76 @@ export const newProduct = TryCatch(
         res: Response,
         next: NextFunction
     ) => {
-        const { name, price, stock, category } = req.body;
-        const photo = req.file;
-
-        if (!photo)
-            return next(new errorHandler('Please add product photo', 400));
-
-        if (!name || !price || !stock || !category) {
-            // rm(req.file?.path, () => {
-            //     console.log('File deleted successfully');
-            // });
-
-            return next(new errorHandler('All fields are required', 400));
-        }
-
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(photo.path, {
-            folder: 'uploads',
-            resource_type: 'auto',
-        });
-
-        await Product.create({
+        const {
             name,
             price,
+            originalPrice,
+            stock,
+            category,
+            brand,
+            description,
+            features,
+            colors,
+        } = req.body;
+
+        const images = req.files as Express.Multer.File[];
+
+        // Check required fields
+        if (
+            !name ||
+            !price ||
+            !originalPrice ||
+            !stock ||
+            !category ||
+            !brand ||
+            !description ||
+            !images ||
+            images.length === 0
+        ) {
+            // Clean up uploaded files
+            images?.forEach((file) => fs.unlinkSync(file.path));
+            return next(
+                new errorHandler(
+                    'All fields including at least one image are required',
+                    400
+                )
+            );
+        }
+
+        // Upload images to Cloudinary
+        const imageUploadResults = await Promise.all(
+            images.map((image) =>
+                cloudinary.uploader.upload(image.path, {
+                    folder: 'uploads',
+                    resource_type: 'auto',
+                })
+            )
+        );
+
+        // Clean up local files
+        images.forEach((image) => fs.unlinkSync(image.path));
+
+        // Build the product object
+        const product = await Product.create({
+            name,
+            price,
+            originalPrice,
             stock,
             category: category.toLowerCase(),
-            photo: result.secure_url,
+            brand,
+            description,
+            features: Array.isArray(features) ? features : features?.split(','),
+            colors: Array.isArray(colors) ? colors : colors?.split(','),
+            images: imageUploadResults.map((result) => result.secure_url),
         });
 
-        // Delete file from local uploads folder
-        fs.unlinkSync(photo.path);
-
-        console.log('Url', result.secure_url);
-
-        //invalidate the cache
+        // Invalidate cache
         invalidatCache({ product: true, admin: true });
 
         return res.status(201).json({
             success: true,
             message: 'Product created successfully',
+            product,
         });
     }
 );
@@ -146,69 +177,81 @@ export const newProduct = TryCatch(
 export const updateProduct = TryCatch(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { name, price, stock, category } = req.body; // Destructure from req.body
+        const {
+            name,
+            price,
+            stock,
+            category,
+            brand,
+            description,
+            originalPrice,
+            features,
+            colors,
+        } = req.body;
+
+        const files = req.files as Express.Multer.File[];
 
         const product = await Product.findById(id);
-
         if (!product) {
+            // Clean up any uploaded images
+            files?.forEach((file) => fs.unlinkSync(file.path));
             return next(new errorHandler('Product not found', 404));
         }
 
-        const photo = req.file;
-
-        // Handle new photo upload
-        // if (photo) {
-        //     // Delete from Cloudinary
-        //     await cloudinary.uploader.destroy(image.publicId);
-        //     product.photo = photo.path; // Update the photo path
-        // }
-
-        if (photo) {
-            try {
-                // 🔥 Delete previous image if it exists
-                if (product.photo) {
-                    const parts = product.photo.split('/');
+        // 🔥 Handle new image uploads
+        if (files && files.length > 0) {
+            // Delete previous images from Cloudinary
+            const deleteResults = await Promise.all(
+                product.images.map(async (imageUrl) => {
+                    const parts = imageUrl.split('/');
                     const publicIdWithExt = parts.slice(-2).join('/');
                     const publicId = publicIdWithExt.replace(
                         /\.(jpg|jpeg|png|webp|gif)$/,
                         ''
                     );
+                    return cloudinary.uploader.destroy(publicId);
+                })
+            );
 
-                    const deleteResult = await cloudinary.uploader.destroy(
-                        publicId
-                    );
-                    console.log('Delete result:', deleteResult);
-                }
+            console.log('Deleted images from Cloudinary:', deleteResults);
 
-                // 📤 Upload new image to Cloudinary
-                const uploadResult = await cloudinary.uploader.upload(
-                    photo.path,
-                    {
+            // Upload new images
+            const uploadResults = await Promise.all(
+                files.map((file) =>
+                    cloudinary.uploader.upload(file.path, {
                         folder: 'uploads',
                         resource_type: 'auto',
-                    }
-                );
+                    })
+                )
+            );
 
-                product.photo = uploadResult.secure_url;
-            } catch (err) {
-                console.error('Error processing image:', err);
-            }
+            // Replace images
+            product.images = uploadResults.map((result) => result.secure_url);
+
+            // Delete uploaded files from server
+            files.forEach((file) => fs.unlinkSync(file.path));
         }
 
-        // Update other fields conditionally
+        // ✅ Update other fields conditionally
         if (name) product.name = name;
         if (price) product.price = price;
+        if (originalPrice) product.originalPrice = originalPrice;
         if (stock) product.stock = stock;
-        if (category) product.category = category.toLowerCase(); // Normalize category
-
-        await product.save(); // Save updated product
-
-        if (photo) {
-            // Delete file from local uploads folder
-            fs.unlinkSync(photo.path);
+        if (category) product.category = category.toLowerCase();
+        if (brand) product.brand = brand;
+        if (description) product.description = description;
+        if (features) {
+            product.features = Array.isArray(features)
+                ? features
+                : features.split(',');
+        }
+        if (colors) {
+            product.colors = Array.isArray(colors) ? colors : colors.split(',');
         }
 
-        //invalidate the cache
+        await product.save();
+
+        // Invalidate cache
         invalidatCache({
             product: true,
             productId: String(product._id),
@@ -218,13 +261,14 @@ export const updateProduct = TryCatch(
         return res.status(200).json({
             success: true,
             message: 'Product updated successfully',
+            product,
         });
     }
 );
 
 export const deleteProduct = TryCatch(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { id } = req.params; // Extract ID from request parameters
+        const { id } = req.params;
 
         const product = await Product.findById(id);
 
@@ -232,21 +276,35 @@ export const deleteProduct = TryCatch(
             return next(new errorHandler('Product not found', 404));
         }
 
-        // Delete old photo if it exists
-        if (product.photo) {
-            rm(product.photo, (err) => {
-                if (err) {
-                    console.error('Error deleting product photo:', err);
-                } else {
-                    console.log('Product photo deleted successfully');
-                }
-            });
+        // 🧹 Delete images from Cloudinary
+        if (product.images && product.images.length > 0) {
+            await Promise.all(
+                product.images.map(async (imageUrl) => {
+                    try {
+                        const parts = imageUrl.split('/');
+                        const publicIdWithExt = parts.slice(-2).join('/');
+                        const publicId = publicIdWithExt.replace(
+                            /\.(jpg|jpeg|png|webp|gif)$/,
+                            ''
+                        );
+                        const result = await cloudinary.uploader.destroy(
+                            publicId
+                        );
+                        console.log(`Deleted image: ${publicId}`, result);
+                    } catch (error) {
+                        console.error(
+                            'Failed to delete Cloudinary image:',
+                            error
+                        );
+                    }
+                })
+            );
         }
 
-        // Ensure the correct product is deleted
-        await product.deleteOne({ _id: id });
+        // 🗑️ Delete product from DB
+        await product.deleteOne();
 
-        //invalidate the cache
+        // 🚫 Invalidate cache
         invalidatCache({
             product: true,
             productId: String(product._id),

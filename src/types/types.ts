@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
-import { Product } from "../models/product.js";
+import { NextFunction, Request, Response } from 'express';
+import { Product } from '../models/product.js';
 
 export interface NewUserRequestBody {
     name: string;
@@ -13,8 +13,13 @@ export interface NewUserRequestBody {
 export interface NewProductRequestBody {
     name: string;
     price: number;
+    originalPrice: number;
     stock: number;
     category: string;
+    brand: string;
+    description: string;
+    features: string[] | string;
+    colors: string[] | string;
 }
 
 export type ControllerType = any;

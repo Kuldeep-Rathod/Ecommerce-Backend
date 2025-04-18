@@ -1,28 +1,58 @@
-import mongoose from "mongoose";
-import { trim } from "validator";
+import mongoose from 'mongoose';
+import { trim } from 'validator';
 
 const productSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            required: [true, "Please enter product name"],
+            required: [true, 'Product name is required'],
+            trim: true,
         },
-        photo: {
+        brand: {
             type: String,
-            required: [true, "Please add product photo"],
+            required: [true, 'Brand is required'],
+            trim: true,
         },
         price: {
             type: Number,
-            required: [true, "Please enter product price"],
+            required: [true, 'Price is required'],
         },
-        stock: {
+        originalPrice: {
             type: Number,
-            required: [true, "Please enter stock"],
+            required: [true, 'Original price is required'],
+        },
+        description: {
+            type: String,
+            required: [true, 'Description is required'],
+        },
+        features: {
+            type: [String],
+            default: [],
+        },
+        colors: {
+            type: [String],
+            default: [],
+        },
+        images: {
+            type: [String],
+            required: [true, 'At least one image is required'],
+            
         },
         category: {
             type: String,
-            required: [true, "Please enter category"],
-            trim: true,
+            required: [true, 'Category is required'],
+        },
+        stock: {
+            type: Number,
+            required: [true, 'Stock is required'],
+        },
+        rating: {
+            type: Number,
+            default: 0,
+        },
+        reviews: {
+            type: Number,
+            default: 0,
         },
     },
     {
@@ -30,4 +60,4 @@ const productSchema = new mongoose.Schema(
     }
 );
 
-export const Product = mongoose.model("Product", productSchema);
+export const Product = mongoose.model('Product', productSchema);
