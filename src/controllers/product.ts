@@ -114,6 +114,9 @@ export const newProduct = TryCatch(
 
         const images = req.files as Express.Multer.File[];
 
+        console.log("body",req.body); // Check if name, price, etc., are coming
+        console.log(req.files);
+
         // Check required fields
         if (
             !name ||
@@ -169,7 +172,6 @@ export const newProduct = TryCatch(
         return res.status(201).json({
             success: true,
             message: 'Product created successfully',
-            product,
         });
     }
 );

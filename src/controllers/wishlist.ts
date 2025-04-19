@@ -11,7 +11,7 @@ export const getWishlist = TryCatch(async (req: Request, res: Response) => {
 
     const wishlist = await Wishlist.findOne({ user: userId }).populate({
         path: 'items.product',
-        select: 'name price photo category stock', // Only fetch needed fields
+        select: 'name price originalPrice images category stock', // Only fetch needed fields
     });
 
     if (!wishlist) {

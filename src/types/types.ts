@@ -62,7 +62,7 @@ export type InvalidateCacheProps = {
 
 export type OrderItemType = {
     name: string;
-    photo: string;
+    image: string;
     price: number;
     quantity: number;
     productId: string;
