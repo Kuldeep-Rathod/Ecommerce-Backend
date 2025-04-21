@@ -59,7 +59,7 @@ export const getAdminProduct = TryCatch(
         if (myCache.has('adminProducts')) {
             products = JSON.parse(myCache.get('adminProducts') as string);
         } else {
-            products = await Product.find({});
+            products = await Product.find({}).sort({ createdAt: -1 });
             myCache.set('adminProducts', JSON.stringify(products));
         }
 
@@ -114,7 +114,7 @@ export const newProduct = TryCatch(
 
         const images = req.files as Express.Multer.File[];
 
-        console.log("body",req.body); // Check if name, price, etc., are coming
+        console.log('body', req.body); // Check if name, price, etc., are coming
         console.log(req.files);
 
         // Check required fields
@@ -350,13 +350,13 @@ export const getAllProducts = TryCatch(
 
         // Fetch paginated products based on the query, sort, limit, and skip parameters
         const productPromise = Product.find(baseQuery)
-            .sort(sort && { price: sort === 'asc' ? 1 : -1 })
+            .sort(sort ? { price: sort === 'asc' ? 1 : -1 } : { createdAt: -1 })
             .limit(limit)
             .skip(skip);
 
         const [products, filteredProducts] = await Promise.all([
-            productPromise, // Fetch the paginated and sorted products
-            Product.find(baseQuery), // Fetch all products that match the filter criteria
+            productPromise,
+            Product.find(baseQuery),
         ]);
 
         const totalPage = Math.ceil(filteredProducts.length / limit);

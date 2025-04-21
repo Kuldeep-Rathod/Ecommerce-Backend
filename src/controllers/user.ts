@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-import { User } from "../models/user.js";
-import { NewUserRequestBody } from "../types/types.js";
-import { TryCatch } from "../middlewares/error.js";
-import errorHandler from "../utils/utilityClass.js";
+import { NextFunction, Request, Response } from 'express';
+import { User } from '../models/user.js';
+import { NewUserRequestBody } from '../types/types.js';
+import { TryCatch } from '../middlewares/error.js';
+import errorHandler from '../utils/utilityClass.js';
 
 export const newUser = TryCatch(
     async (
@@ -21,7 +21,7 @@ export const newUser = TryCatch(
             });
 
         if (!_id || !name || !email || !gender || !photo || !dob)
-            return next(new errorHandler("All fields are required", 400));
+            return next(new errorHandler('All fields are required', 400));
 
         user = await User.create({
             name,
@@ -41,7 +41,7 @@ export const newUser = TryCatch(
 
 export const getAllUsers = TryCatch(
     async (req: Request, res: Response, next: NextFunction) => {
-        const users = await User.find();
+        const users = await User.find().sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             users,
@@ -55,7 +55,7 @@ export const getUser = TryCatch(
 
         const user = await User.findById(id);
 
-        if (!user) return next(new errorHandler("User not found", 404));
+        if (!user) return next(new errorHandler('User not found', 404));
 
         return res.status(200).json({
             success: true,
@@ -70,13 +70,13 @@ export const deleteUser = TryCatch(
 
         const user = await User.findById(id);
 
-        if (!user) return next(new errorHandler("User not found", 404));
+        if (!user) return next(new errorHandler('User not found', 404));
 
         await user.deleteOne();
 
         return res.status(200).json({
             success: true,
-            message: "User deleted successfully",
+            message: 'User deleted successfully',
         });
     }
 );

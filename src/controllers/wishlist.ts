@@ -9,10 +9,12 @@ export const getWishlist = TryCatch(async (req: Request, res: Response) => {
 
     console.log(userId);
 
-    const wishlist = await Wishlist.findOne({ user: userId }).populate({
-        path: 'items.product',
-        select: 'name price originalPrice images category stock', // Only fetch needed fields
-    });
+    const wishlist = await Wishlist.findOne({ user: userId })
+        .sort({ createdAt: -1 })
+        .populate({
+            path: 'items.product',
+            select: 'name price originalPrice images category stock', // Only fetch needed fields
+        });
 
     if (!wishlist) {
         return res.status(200).json({ success: true, items: [] });
