@@ -15,6 +15,7 @@ import orderRoute from './routes/order.js';
 import paymentRoute from './routes/payment.js';
 import dashboardRoute from './routes/statistics.js';
 import wishlistRoute from './routes/wishlist.js';
+import cartRoutes from './routes/cart.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use('/api/v1/payment', paymentRoute);
 app.use('/api/v1/dashboard', dashboardRoute);
 
 app.use('/api/v1/wishlist', wishlistRoute);
+app.use('/api/v1/cart', cartRoutes);
 
 app.use('/uploads', express.static('uploads'));
 app.use(errorMiddleware);
