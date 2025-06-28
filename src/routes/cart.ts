@@ -1,15 +1,19 @@
 import express from 'express';
 import {
-    upsertCart,
+    clearCart,
     getCart,
     removeCartItem,
-    clearCart,
+    updateCartItemQuantity,
+    upsertCart,
 } from '../controllers/cart.js';
 
 const router = express.Router();
 
 // Route: POST "/api/v1/cart/upsert"
-router.post('/upsert', upsertCart);
+router.put('/upsert', upsertCart);
+
+// Route: POST "/api/v1/cart/upsert"
+router.post('/update', updateCartItemQuantity);
 
 // Route: GET "/api/v1/cart/my"
 router.get('/my', getCart);
