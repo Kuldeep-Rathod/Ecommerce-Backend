@@ -4,10 +4,10 @@ import express from 'express';
 import morgan from 'morgan';
 import NodeCache from 'node-cache';
 import Stripe from 'stripe';
-import { connectDB } from './config/connectDb.js';
 import { connectRedis } from './config/connectRedis.js';
 import { errorMiddleware } from './middlewares/error.js';
 import { registerRoutes } from './routes.js';
+import { connectDB } from './config/connectDB.js';
 
 dotenv.config();
 
