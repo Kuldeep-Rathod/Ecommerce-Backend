@@ -1,17 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
-import { errorMiddleware, TryCatch } from '../middlewares/error.js';
+import fs from 'fs';
+import { myCache } from '../app.js';
+import cloudinary from '../config/cloudinary.js';
+import { redis } from '../config/connectRedis.js';
+import { TryCatch } from '../middlewares/error.js';
 import { Product } from '../models/product.js';
 import {
     BaseQuery,
     NewProductRequestBody,
     SearchRequestQuery,
 } from '../types/types.js';
-import fs from 'fs';
-import errorHandler from '../utils/utilityClass.js';
-import { rm } from 'fs';
-import { myCache } from '../app.js';
 import { invalidatCache } from '../utils/features.js';
-import cloudinary from '../utils/cloudinary.js';
+import errorHandler from '../utils/utilityClass.js';
 
 //Revalidate the cache on new, updated, or deleted products and on New orders
 export const getLatestProduct = TryCatch(
@@ -24,6 +24,19 @@ export const getLatestProduct = TryCatch(
             products = await Product.find({}).sort({ createdAt: -1 }).limit(8);
             myCache.set('latestProduct', JSON.stringify(products));
         }
+
+        // const cachedProducts = await redis.get('latestProduct');
+
+        // if (cachedProducts) {
+        //     products = JSON.parse(cachedProducts);
+        // } else {
+        //     products = await Product.find({}).sort({ createdAt: -1 }).limit(8);
+        //     await redis.setex(
+        //         'latestProduct',
+        //         60 * 10,
+        //         JSON.stringify(products)
+        //     ); // ⏱ 10 minutes TTL
+        // }
 
         return res.status(200).json({
             success: true,
@@ -43,6 +56,16 @@ export const getAllCategories = TryCatch(
             categories = await Product.find({}).distinct('category');
             myCache.set('categories', JSON.stringify(categories));
         }
+
+        // if (await redis.exists('categories')) {
+        //     const cached = await redis.get('categories');
+        //     if (cached) {
+        //         categories = JSON.parse(cached);
+        //     }
+        // } else {
+        //     categories = await Product.find({}).distinct('category');
+        //     await redis.set('categories', JSON.stringify(categories));
+        // }
 
         return res.status(200).json({
             success: true,
@@ -113,9 +136,6 @@ export const newProduct = TryCatch(
         } = req.body;
 
         const images = req.files as Express.Multer.File[];
-
-        console.log('body', req.body); // Check if name, price, etc., are coming
-        console.log(req.files);
 
         // Check required fields
         if (

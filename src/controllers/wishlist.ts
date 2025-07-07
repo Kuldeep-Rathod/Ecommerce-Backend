@@ -7,8 +7,6 @@ import mongoose from 'mongoose';
 export const getWishlist = TryCatch(async (req: Request, res: Response) => {
     const { userId } = req.query;
 
-    console.log(userId);
-
     const wishlist = await Wishlist.findOne({ user: userId })
         .sort({ createdAt: -1 })
         .populate({

@@ -1,21 +1,13 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import { connect } from 'http2';
-import { connectDB } from './utils/features.js';
-import { errorMiddleware } from './middlewares/error.js';
-import NodeCache from 'node-cache';
-import morgan from 'morgan';
-import Stripe from 'stripe';
 import cors from 'cors';
-
-//importing routes
-import userRoute from './routes/user.js';
-import productRoute from './routes/products.js';
-import orderRoute from './routes/order.js';
-import paymentRoute from './routes/payment.js';
-import dashboardRoute from './routes/statistics.js';
-import wishlistRoute from './routes/wishlist.js';
-import cartRoutes from './routes/cart.js';
+import dotenv from 'dotenv';
+import express from 'express';
+import morgan from 'morgan';
+import NodeCache from 'node-cache';
+import Stripe from 'stripe';
+import { connectDB } from './config/connectDb.js';
+import { connectRedis } from './config/connectRedis.js';
+import { errorMiddleware } from './middlewares/error.js';
+import { registerRoutes } from './routes.js';
 
 dotenv.config();
 
@@ -30,24 +22,16 @@ app.use(morgan('dev'));
 app.use(cors());
 
 connectDB(mongoURI);
+connectRedis();
 
 export const stripe = new Stripe(stripeKey);
-
 export const myCache = new NodeCache();
 
 app.get('/', (req, res) => {
     res.send(`Server is running on http://localhost:${port}`);
 });
 
-// using routes
-app.use('/api/v1/user', userRoute);
-app.use('/api/v1/product', productRoute);
-app.use('/api/v1/order', orderRoute);
-app.use('/api/v1/payment', paymentRoute);
-app.use('/api/v1/dashboard', dashboardRoute);
-
-app.use('/api/v1/wishlist', wishlistRoute);
-app.use('/api/v1/cart', cartRoutes);
+registerRoutes(app);
 
 app.use('/uploads', express.static('uploads'));
 app.use(errorMiddleware);

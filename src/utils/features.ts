@@ -1,20 +1,6 @@
-import mongoose from "mongoose";
-import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
-import { myCache } from "../app.js";
-import { Product } from "../models/product.js";
-import { Order } from "../models/order.js";
-
-export const connectDB = async (uri: string) => {
-    try {
-        await mongoose.connect(uri, {
-            dbName: "Ecommerce",
-        });
-        const connection = mongoose.connection;
-        console.log(`MongoDB connected to ${connection.host}`);
-    } catch (error) {
-        console.log(error);
-    }
-};
+import { myCache } from '../app.js';
+import { Product } from '../models/product.js';
+import { InvalidateCacheProps, OrderItemType } from '../types/types.js';
 
 export const invalidatCache = ({
     product,
@@ -26,16 +12,16 @@ export const invalidatCache = ({
 }: InvalidateCacheProps) => {
     if (product) {
         const productKeys: string[] = [
-            "latestProduct",
-            "categories",
-            "adminProducts",
+            'latestProduct',
+            'categories',
+            'adminProducts',
         ];
 
-        if (typeof productId === "string") {
+        if (typeof productId === 'string') {
             productKeys.push(`product-${productId}`);
         }
 
-        if (typeof productId === "object") {
+        if (typeof productId === 'object') {
             productId.forEach((i) => productKeys.push(`product-${i}`));
         }
 
@@ -52,10 +38,10 @@ export const invalidatCache = ({
     }
     if (admin) {
         myCache.del([
-            "admin-statistics",
-            "admin-piecharts",
-            "admin-barcharts",
-            "admin-linecharts",
+            'admin-statistics',
+            'admin-piecharts',
+            'admin-barcharts',
+            'admin-linecharts',
         ]);
     }
 };
@@ -65,7 +51,7 @@ export const reduceStock = async (orderItems: OrderItemType[]) => {
         const order = orderItems[i];
         const product = await Product.findById(order.productId);
 
-        if (!product) throw new Error("Product not found");
+        if (!product) throw new Error('Product not found');
 
         product.stock -= order.quantity;
         await product.save();
@@ -96,7 +82,7 @@ export const getInventories = async ({
     const categoryCounts: Record<string, number>[] = [];
 
     results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
+        if (result.status === 'fulfilled') {
             categoryCounts.push({
                 [categories[index]]: Math.round(
                     (result.value / totalProducts) * 100
